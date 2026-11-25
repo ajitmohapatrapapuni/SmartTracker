@@ -1,5 +1,6 @@
-import { Activity, Bug, ClipboardCheck, FileText, FolderKanban, LayoutDashboard, Sparkles, Target } from "lucide-react";
+import { Bug, ClipboardCheck, FileText, FolderKanban, LayoutDashboard, Paintbrush, Sparkles, Target } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import Brand from "../ui/Brand.jsx";
 
 const links = [
   ["/", "Overview", LayoutDashboard],
@@ -9,12 +10,13 @@ const links = [
   ["/bugs", "Bug tracker", Bug],
   ["/ai-generator", "AI generator", Sparkles],
   ["/documents", "Documents", FileText],
+  ["/appearance", "Appearance", Paintbrush],
 ];
 
 export default function Sidebar() {
   return (
     <aside className="sidebar">
-      <div className="brand"><span className="brand-icon"><Activity size={20} /></span><span>Smart<span className="brand-light">Tracker</span></span></div>
+      <Brand />
       <div className="nav-caption">WORKSPACE</div>
       <nav className="side-nav">
         {links.map(([to, label, Icon]) => (

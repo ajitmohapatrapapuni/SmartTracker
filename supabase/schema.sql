@@ -46,9 +46,12 @@ create table if not exists public.bugs (
   severity text not null default 'Medium' check (severity in ('Low', 'Medium', 'High', 'Critical')),
   priority text not null default 'Medium' check (priority in ('Low', 'Medium', 'High', 'Critical')),
   status text not null default 'Open' check (status in ('Open', 'In Progress', 'Resolved', 'Closed')),
+  attachments jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.bugs add column if not exists attachments jsonb not null default '[]'::jsonb;
 
 create table if not exists public.documents (
   id uuid primary key default gen_random_uuid(),
@@ -58,6 +61,58 @@ create table if not exists public.documents (
   type text not null check (type in ('BRD', 'SRS')),
   content text not null,
   created_at timestamptz not null default now()
+);
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'bug-attachments',
+  'bug-attachments',
+  false,
+  20971520,
+  array[
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/bmp',
+    'image/tiff',
+    'video/mp4',
+    'video/webm',
+    'video/quicktime',
+    'video/x-msvideo',
+    'video/mpeg'
+  ]
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Users upload bug attachments" on storage.objects;
+create policy "Users upload bug attachments"
+on storage.objects for insert to authenticated
+with check (
+  bucket_id = 'bug-attachments'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "Users read bug attachments" on storage.objects;
+create policy "Users read bug attachments"
+on storage.objects for select to authenticated
+using (
+  bucket_id = 'bug-attachments'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "Users delete bug attachments" on storage.objects;
+create policy "Users delete bug attachments"
+on storage.objects for delete to authenticated
+using (
+  bucket_id = 'bug-attachments'
+  and (storage.foldername(name))[1] = auth.uid()::text
 );
 
 create index if not exists requirements_user_id_idx on public.requirements(user_id);

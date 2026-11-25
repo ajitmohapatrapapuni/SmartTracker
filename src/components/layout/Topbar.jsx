@@ -4,7 +4,7 @@ import { useAuth } from "../../hooks/useAuth.js";
 import Button from "../ui/Button.jsx";
 import { authService } from "../../services/authService.js";
 
-const titles = { "/": "Overview", "/projects": "Projects", "/requirements": "Requirements", "/test-cases": "Test cases", "/bugs": "Bug tracker", "/ai-generator": "AI test generator", "/documents": "Documents" };
+const titles = { "/": "Overview", "/projects": "Projects", "/requirements": "Requirements", "/test-cases": "Test cases", "/bugs": "Bug tracker", "/ai-generator": "AI test generator", "/documents": "Documents", "/appearance": "Appearance" };
 
 export default function Topbar() {
   const { pathname } = useLocation();

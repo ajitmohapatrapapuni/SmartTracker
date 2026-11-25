@@ -20,11 +20,19 @@ export default function RecordPage({ title, description, service, useData, field
 
   async function save(event) {
     event.preventDefault();
-    const values = Object.fromEntries(new FormData(event.currentTarget).entries());
+    const formData = new FormData(event.currentTarget);
+    const values = Object.fromEntries([...formData.entries()].filter(([, value]) => typeof value === "string"));
+    const filesByField = {};
+    fields.forEach((field) => {
+      if (field.type === "file") {
+        const input = event.currentTarget.elements[field.name];
+        if (input?.files?.length) filesByField[field.name] = Array.from(input.files);
+      }
+    });
     try {
       setActionError("");
-      if (editing?.id) await service.update(editing.id, values);
-      else await service.create(values);
+      if (editing?.id) await service.update(editing.id, values, filesByField, editing.attachments || []);
+      else await service.create(values, filesByField);
       setEditing(null);
       await refresh();
     } catch (err) { setActionError(err.message || "Could not save this item."); }
@@ -43,7 +51,7 @@ export default function RecordPage({ title, description, service, useData, field
       <div className="table-toolbar"><div><strong>{records.length} items</strong><span> in your workspace</span></div><div className="table-tools"><input className="control search-control" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search items…" />{filters.length > 0 && <select className="control" value={filter} onChange={(event) => setFilter(event.target.value)}><option>All</option>{filters.map((item) => <option key={item}>{item}</option>)}</select>}</div></div>
       {loading ? <div className="loading-inline">Loading…</div> : visible.length === 0 ? <EmptyState title={records.length ? "No matching items" : `No ${title.toLowerCase()} yet`} description={records.length ? "Try changing the search or filter." : "Use the button above to create your first item."} /> : <DataTable columns={columns} rows={visible} renderActions={(row) => <><button className="row-icon" title="Edit" onClick={() => { setActionError(""); setEditing(row); }}><Pencil size={15} /></button><button className="row-icon delete-icon" title="Delete" onClick={() => setDeleting(row)}><Trash2 size={15} /></button></>} />}
     </div>
-    {editing && <Modal title={editing.id ? `Edit ${title.replace(/s$/, "")}` : `New ${title.replace(/s$/, "")}`} onClose={() => setEditing(null)}><form className="record-form" onSubmit={save}>{fields.map((field) => <label key={field.name}>{field.label}{field.type === "textarea" ? <textarea name={field.name} required={field.required !== false} defaultValue={editing[field.name] || ""} rows="3" /> : field.options ? <select name={field.name} defaultValue={editing[field.name] || field.options[0]}>{field.options.map((option) => <option key={option}>{option}</option>)}</select> : <input name={field.name} required={field.required !== false} type={field.type || "text"} defaultValue={editing[field.name] || ""} />}</label>)}{actionError && <div className="alert error-alert">{actionError}</div>}<div className="form-actions"><Button variant="secondary" type="button" onClick={() => setEditing(null)}>Cancel</Button><Button type="submit">Save item</Button></div></form></Modal>}
+    {editing && <Modal title={editing.id ? `Edit ${title.replace(/s$/, "")}` : `New ${title.replace(/s$/, "")}`} onClose={() => setEditing(null)}><form className="record-form" onSubmit={save}>{fields.map((field) => <label key={field.name}>{field.label}{field.type === "textarea" ? <textarea name={field.name} required={field.required !== false} defaultValue={editing[field.name] || ""} rows="3" /> : field.type === "file" ? <input name={field.name} type="file" accept={field.accept} multiple={field.multiple} {...(field.directory ? { webkitdirectory: "true", directory: "true" } : {})} /> : field.options ? <select name={field.name} defaultValue={editing[field.name] || field.options[0]}>{field.options.map((option) => <option key={option}>{option}</option>)}</select> : <input name={field.name} required={field.required !== false} type={field.type || "text"} defaultValue={editing[field.name] || ""} />}</label>)}{actionError && <div className="alert error-alert">{actionError}</div>}<div className="form-actions"><Button variant="secondary" type="button" onClick={() => setEditing(null)}>Cancel</Button><Button type="submit">Save item</Button></div></form></Modal>}
     {deleting && <ConfirmDialog onCancel={() => setDeleting(null)} onConfirm={remove} />}
   </section>;
 }

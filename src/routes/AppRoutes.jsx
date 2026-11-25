@@ -12,6 +12,7 @@ const TestCases = lazy(() => import("../pages/TestCases.jsx"));
 const Bugs = lazy(() => import("../pages/Bugs.jsx"));
 const AiGenerator = lazy(() => import("../pages/AiGenerator.jsx"));
 const Documents = lazy(() => import("../pages/Documents.jsx"));
+const Appearance = lazy(() => import("../pages/Appearance.jsx"));
 const NotFound = lazy(() => import("../pages/NotFound.jsx"));
 
 const loadPage = (Page) => <Suspense fallback={<div className="screen-loading">Loading page…</div>}><Page /></Suspense>;
@@ -30,6 +31,7 @@ export default function AppRoutes() {
           <Route path="bugs" element={loadPage(Bugs)} />
           <Route path="ai-generator" element={loadPage(AiGenerator)} />
           <Route path="documents" element={loadPage(Documents)} />
+          <Route path="appearance" element={loadPage(Appearance)} />
           <Route path="*" element={loadPage(NotFound)} />
         </Route>
       </Route>
